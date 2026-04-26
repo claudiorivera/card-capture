@@ -1,204 +1,76 @@
-Welcome to your new TanStack Start app! 
+# Untitled capture card game
 
-# Getting Started
+This is a solitaire deck-building game played with a standard deck of cards, based on "Card Capture" by Lucas Gentry.
 
-To run this application:
+## Objective
 
-```bash
-pnpm install
-pnpm dev
-```
+The player wins when the Enemy Draw Deck and the four Enemy Card Slots are empty. The player loses when any Elite Cards (faces and aces) are discarded to the Enemy Discard Pile.
 
-# Building For Production
+## Play area description
 
-To build this application for production:
+The game is played with two rows of six columns.
 
-```bash
-pnpm build
-```
+The top row is the Enemy Row with following columns, from left to right: Enemy Draw Deck, four Enemy Card Slots (from left to right, 4 to 1, so that position 4 is nearest the Enemy Draw Deck and position 1 is nearest the Enemy Discard Pile), Enemy Discard Pile.
 
-## Testing
+The bottom row is the Player Row with the following columns, from left to right: Player Draw Deck, four Player Card Slots (from left to right, 4 to 1, so that position 4 is nearest the Player Draw Deck and position 1 is nearest the Player Discard Pile), Player Discard Pile.
 
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
+## Setup
 
-```bash
-pnpm test
-```
+Begin with a standard deck of 52 playing cards plus two Jokers.
 
-## Styling
+Take all 2s, 3s, 4s, and the two Jokers to form the player's starting deck of 14 cards. Shuffle the 14 cards to form the Player's Draw Deck.
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
+The remaining 40 cards make up the Enemy Deck. Shuffle the Enemy Deck and place it in the Enemy Draw Deck position, then deal out four cards to Enemy Card Slots, 4 to 1.
 
-### Removing Tailwind CSS
+Take any Elite Cards and move them to the bottom of the Enemy Draw Deck. Note that this may leave as many as four empty Enemy Card Slots.
 
-If you prefer not to use Tailwind CSS:
+That completes the game setup.
 
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Uninstall the packages: `pnpm add @tailwindcss/vite tailwindcss --dev`
+## Overview
 
-## Linting & Formatting
+The game is played until the player wins or loses, and is played over a series of turns that consist of the following phases:
 
-This project uses [Biome](https://biomejs.dev/) for linting and formatting. The following scripts are available:
+### Enemy Phase
 
+Any empty Enemy Slots are filled by first moving cards from left to right and then by drawing cards one at a time to fill the empty Enemy Slots.
 
-```bash
-pnpm lint
-pnpm format
-pnpm check
-```
+For example, let's say that during setup, the Enemy Slots consisted of: 5 of clubs, King of Diamonds, Queen of Hearts, 7 of Hearts. In this case, the setup would have sent the King of Diamonds and the Queen of Hearts to the bottom of the Enemy Draw Deck, leaving slots 2 and 3 empty. During the Enemy Phase, we would move the 5 of clubs from slot 4 into slot 2, and then draw a card for Enemy Slot 3 and a card for Enemy Slot 1.
 
+If the Enemy Draw Deck is empty, the empty Enemy Slots remain empty.
 
+### Discard Phase
 
-## Routing
+The player may discard any number of cards from their Player Slots to the Player Discard Pile
 
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
+### Draw Phase
 
-### Adding A Route
+The player fills any empty Player Slots, one at a time, from the Player Draw Deck. If at any time the player needs to draw and the Player Draw Deck is empty, the Player Discard Pile is shuffled to form a new Player Draw Deck, and drawing continues until all empty Player Slots are full.
 
-To add a new route to your application just add a new file in the `./src/routes` directory.
+### Capture Phase
 
-TanStack will automatically generate the content of the route file for you.
+The player chooses from three possible actions:
 
-Now that you have two routes you can use a `Link` component to navigate between them.
+#### Enemy Capture
 
-### Adding Links
+The player chooses any one of the cards in their Player Slots to be captured, and the chosen card along with the enemy card in Enemy Slot 1 get put into the Enemy Discard Pile.
 
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
+If either the chosen player card or the enemy card in Enemy Slot 1 are an Elite Card, the player loses. As such, when there is an Elite Card in Enemy Slot 1, and the player is forced to take the Enemy Capture action, this would end the game and the player would lose.
 
-```tsx
-import { Link } from "@tanstack/react-router";
-```
+#### Sacrifice
 
-Then anywhere in your JSX you can use it like so:
+The player chooses any two cards in their Player Slots to be captured, and the chosen cards are put into the Enemy Discard Pile. The player then takes a card from any Enemy Slot and moves it to the bottom of the Enemy Draw deck.
 
-```tsx
-<Link to="/about">About</Link>
-```
+Note that since sacrificed cards end up in the Enemy Discard Pile pile, if a player chooses (or is forced to choose) an Elite Card to Sacrifice, this would also end the game and the player would lose.
 
-This will create a link that will navigate to the `/about` route.
+#### Player Capture
 
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
+The player chooses any number of cards to capture any one card in any Enemy Slot, with the following rules:
 
-### Using A Layout
+1. All player cards must match the suit of the enemy card being captured
+2. The total value of all chosen player cards must be equal to or greater than the enemy card being captured. For example, a player can choose the 2 of Clubs and 4 of Clubs to capture an enemy 5 of Clubs.
+3. Jokers will mimic the suit and value of any card that it's played with. Jokers must be played with at least one non-Joker card. Multiple Jokers may be played, and they will mimic the suit and value of the highest non-Joker card being played. For example, a player could choose a Joker and a 3 of Hearts to capture an enemy 6 of Hearts, or a player could choose two Jokers and a 2 of Hearts to capture an enemy 6 of Hearts.
+4. Jacks have a value of 11, Queens have a value of 12, Kings have a value of 13, and Aces have a value of 14
 
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
+## Game End
 
-Here is an example layout that includes a header:
-
-```tsx
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'My App' },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-})
-```
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from '@tanstack/react-start'
-
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-  
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-  
-  return <div>Server time: {time}</div>
-}
-```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
-
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({ message: 'Hello, World!' }),
-    },
-  },
-})
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  )
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+At the end of the Player Capture phase, if there are no cards in the Enemy Draw Deck and all four Enemy Slots are empty, the player wins!
