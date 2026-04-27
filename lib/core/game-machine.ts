@@ -1,10 +1,10 @@
 import { createMachine } from 'xstate';
 
 export type GameContext = {
-  playerSlots: (Card | null)[];
+  playerSlots: Slot[];
   playerDeck: Card[];
   playerDiscardPile: Card[];
-  enemySlots: (Card | null)[];
+  enemySlots: Slot[];
   enemyDeck: Card[];
   enemyDiscardPile: Card[];
 };
@@ -44,6 +44,7 @@ export const gameMachine = createMachine({
       on: { NEXT: 'discardPhase' },
     },
     discardPhase: {
+      entry: ['handleDiscardPhase'],
       on: { NEXT: 'drawPhase' },
     },
     drawPhase: {

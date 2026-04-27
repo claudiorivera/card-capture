@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { compactSlots, refillSlots } from './utils';
+import { compactSlots, discardPlayerCards, refillSlots } from './utils';
 import { SUIT, type Card, type Slot } from './game-machine';
 
 describe(compactSlots.name, () => {
@@ -55,3 +55,18 @@ describe(refillSlots.name, () => {
     expect(updatedDeck).toEqual([]);
   });
 });
+
+describe(discardPlayerCards.name, () => {
+  it("should discard specified slots", () => {
+    const result = discardPlayerCards({
+      discardPile: [],
+      playerSlots: [{rank: 5, suit: SUIT.HEARTS}, null, null, null],
+      slotsToDiscard: [0],
+    })
+
+    expect(result).toEqual({
+      discardPile: [{rank: 5, suit: SUIT.HEARTS}],
+      playerSlots: [null, null, null, null],
+    })
+  })
+})
