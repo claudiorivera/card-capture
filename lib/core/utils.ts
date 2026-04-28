@@ -42,3 +42,29 @@ export function refillSlots({ slots, deck }: {
     { updatedSlots: [...slots], updatedDeck: [...deck] }
   );
 }
+
+export function drawPlayerCards({
+  playerSlots,
+  playerDeck,
+  playerDiscardPile
+}: {
+  playerSlots: Slot[];
+  playerDeck: Card[];
+  playerDiscardPile: Card[];
+}) {
+  const slots = [...playerSlots];
+
+  const reshuffledDeck = playerDeck.length === 0 && playerDiscardPile.length > 0
+    ? [...playerDiscardPile].sort(() => Math.random() - 0.5)
+    : [...playerDeck];
+
+  const { updatedSlots, updatedDeck } = refillSlots({ slots, deck: reshuffledDeck });
+  
+  return {
+    slots: updatedSlots.every((slot, index) => slot === playerSlots[index])
+      ? updatedSlots
+      : compactSlots(updatedSlots),
+    deck: updatedDeck,
+    discard: playerDeck.length === 0 && playerDiscardPile.length > 0 ? [] : playerDiscardPile
+  };
+}
