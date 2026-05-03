@@ -12,18 +12,18 @@ export type Joker = {
 	suit: null;
 };
 
-export type Card =
+export type PlayingCard =
 	| {
 			value: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14;
 			suit: Suit;
 	  }
 	| Joker;
 
-export type Slot = Card | null;
+export type Slot = PlayingCard | null;
 
 export function createDecks() {
-	const playerDeck: Card[] = [];
-	const enemyDeck: Card[] = [];
+	const playerDeck: PlayingCard[] = [];
+	const enemyDeck: PlayingCard[] = [];
 
 	for (const suit of Object.values(SUIT)) {
 		for (const value of [2, 3, 4] as const) {
@@ -44,8 +44,8 @@ export function createDecks() {
 	};
 }
 
-export function shuffle(deck: Card[]): Card[] {
-	const shuffledDeck: Card[] = [...deck];
+export function shuffle(deck: PlayingCard[]): PlayingCard[] {
+	const shuffledDeck: PlayingCard[] = [...deck];
 
 	for (let i = shuffledDeck.length - 1; i > 0; i--) {
 		const j = Math.floor(Math.random() * (i + 1));

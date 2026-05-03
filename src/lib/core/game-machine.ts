@@ -1,7 +1,7 @@
 import { assertEvent, emit, setup } from "xstate";
 import {
 	createDecks as _createDecks,
-	type Card,
+	type PlayingCard,
 	type Slot,
 } from "#/lib/core/cards";
 import {
@@ -19,11 +19,11 @@ import {
 
 type GameContext = {
 	playerSlots: Slot[];
-	playerDeck: Card[];
-	playerDiscardPile: Card[];
+	playerDeck: PlayingCard[];
+	playerDiscardPile: PlayingCard[];
 	enemySlots: Slot[];
-	enemyDeck: Card[];
-	enemyDiscardPile: Card[];
+	enemyDeck: PlayingCard[];
+	enemyDiscardPile: PlayingCard[];
 };
 
 const context: GameContext = {
@@ -85,7 +85,7 @@ const gameMachineSetup = setup({
 
 			const playerCards = event.playerCardIndices
 				.map((index) => context.playerSlots.at(index))
-				.filter((card): card is Card => card !== null);
+				.filter((card): card is PlayingCard => card !== null);
 
 			return (
 				playerCards.length === event.playerCardIndices.length &&

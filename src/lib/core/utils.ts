@@ -1,7 +1,9 @@
-import type { Card, Joker, Slot } from "#/lib/core/cards";
+import type { Joker, PlayingCard, Slot } from "#/lib/core/cards";
 
 export function compactSlots(slots: Slot[]): Slot[] {
-	const compactedCards = slots.filter((card): card is Card => card !== null);
+	const compactedCards = slots.filter(
+		(card): card is PlayingCard => card !== null,
+	);
 
 	return [
 		...Array(slots.length - compactedCards.length).fill(null),
@@ -11,7 +13,7 @@ export function compactSlots(slots: Slot[]): Slot[] {
 
 type MoveCardsToBottomOfDeckParams = {
 	slots: Slot[];
-	deck: Card[];
+	deck: PlayingCard[];
 	indicesToMove: number[];
 };
 
@@ -21,7 +23,7 @@ export function moveCardsToBottomOfDeck({
 	indicesToMove,
 }: MoveCardsToBottomOfDeckParams) {
 	const uniqueIndices = Array.from(new Set(indicesToMove));
-	const cardsToMove: Card[] = [];
+	const cardsToMove: PlayingCard[] = [];
 
 	for (const index of uniqueIndices) {
 		const card = slots.at(index);
@@ -40,7 +42,7 @@ export function moveCardsToBottomOfDeck({
 
 export type DiscardPlayerCardsParams = {
 	playerSlots: Slot[];
-	discardPile: Card[];
+	discardPile: PlayingCard[];
 	slotsToDiscard: number[];
 };
 
@@ -55,7 +57,7 @@ export function discardPlayerCards({
 
 	const discardedCards = slotsToDiscard
 		.map((index) => playerSlots.at(index))
-		.filter((card): card is Card => card !== null);
+		.filter((card): card is PlayingCard => card !== null);
 
 	return {
 		playerSlots: newPlayerSlots,
@@ -65,7 +67,7 @@ export function discardPlayerCards({
 
 export type RefillSlotsParams = {
 	slots: Slot[];
-	deck: Card[];
+	deck: PlayingCard[];
 };
 
 export function refillSlots({ slots, deck }: RefillSlotsParams) {
@@ -92,8 +94,8 @@ export function refillSlots({ slots, deck }: RefillSlotsParams) {
 
 export type DrawPlayerCardsParams = {
 	playerSlots: Slot[];
-	playerDeck: Card[];
-	playerDiscardPile: Card[];
+	playerDeck: PlayingCard[];
+	playerDiscardPile: PlayingCard[];
 };
 
 export function drawPlayerCards({
@@ -123,7 +125,7 @@ export function drawPlayerCards({
 	};
 }
 
-export function isElite(card: Card) {
+export function isElite(card: PlayingCard) {
 	return (
 		card.value === 11 ||
 		card.value === 12 ||
@@ -132,11 +134,14 @@ export function isElite(card: Card) {
 	);
 }
 
-export function isJoker(card: Card): card is Joker {
+export function isJoker(card: PlayingCard): card is Joker {
 	return card.value === 0 && card.suit === null;
 }
 
-export type CanPlayerCaptureParams = { playerCards: Card[]; enemyCard: Card };
+export type CanPlayerCaptureParams = {
+	playerCards: PlayingCard[];
+	enemyCard: PlayingCard;
+};
 
 export function canPlayerCapture({
 	playerCards,
@@ -173,7 +178,7 @@ export function canPlayerCapture({
 
 export type PerformPlayerCaptureParams = {
 	playerSlots: Slot[];
-	playerDiscardPile: Card[];
+	playerDiscardPile: PlayingCard[];
 	enemySlots: Slot[];
 	enemySlotIndex: number;
 	playerCardIndices: number[];
@@ -188,7 +193,7 @@ export function performPlayerCapture({
 }: PerformPlayerCaptureParams) {
 	const selectedPlayerCards = playerCardIndices
 		.map((index) => playerSlots.at(index))
-		.filter((slot): slot is Card => typeof slot !== "undefined");
+		.filter((slot): slot is PlayingCard => typeof slot !== "undefined");
 	const enemyCard = enemySlots.at(enemySlotIndex);
 
 	return {
@@ -205,8 +210,8 @@ export function performPlayerCapture({
 export type PerformEnemyCaptureParams = {
 	playerSlots: Slot[];
 	enemySlots: Slot[];
-	enemyDiscardPile: Card[];
-	playerDiscardPile: Card[];
+	enemyDiscardPile: PlayingCard[];
+	playerDiscardPile: PlayingCard[];
 	playerSlotIndex: number;
 };
 
@@ -235,10 +240,10 @@ export function performEnemyCapture({
 export type PerformSacrificeParams = {
 	playerSlots: Slot[];
 	enemySlots: Slot[];
-	enemyDeck: Card[];
+	enemyDeck: PlayingCard[];
 	enemySlotIndex: number;
-	enemyDiscardPile: Card[];
-	playerDiscardPile: Card[];
+	enemyDiscardPile: PlayingCard[];
+	playerDiscardPile: PlayingCard[];
 	playerCardIndices: number[];
 };
 
@@ -253,7 +258,7 @@ export function performSacrifice({
 }: PerformSacrificeParams) {
 	const sacrificedPlayerCards = playerCardIndices
 		.map((index) => playerSlots.at(index))
-		.filter((slot): slot is Card => typeof slot !== "undefined");
+		.filter((slot): slot is PlayingCard => typeof slot !== "undefined");
 	const enemyCard = enemySlots.at(enemySlotIndex);
 
 	return {

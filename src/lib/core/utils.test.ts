@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type Card, type Slot, SUIT } from "#/lib/core/cards";
+import { type PlayingCard, type Slot, SUIT } from "#/lib/core/cards";
 import {
 	compactSlots,
 	discardPlayerCards,
@@ -39,7 +39,7 @@ describe(compactSlots.name, () => {
 describe(refillSlots.name, () => {
 	it("should refill empty slots from the deck (right to left)", () => {
 		const slots: Slot[] = [null, null, null, null];
-		const deck: Card[] = [
+		const deck: PlayingCard[] = [
 			{ value: 7, suit: SUIT.HEARTS },
 			{ value: 8, suit: SUIT.DIAMONDS },
 		];
@@ -55,7 +55,7 @@ describe(refillSlots.name, () => {
 
 	it("should leave remaining slots unfilled if the deck is empty", () => {
 		const slots: Slot[] = [null, null, null, null];
-		const deck: Card[] = [{ value: 9, suit: SUIT.SPADES }];
+		const deck: PlayingCard[] = [{ value: 9, suit: SUIT.SPADES }];
 		const { updatedSlots, updatedDeck } = refillSlots({ slots, deck });
 		expect(updatedSlots).toEqual([
 			null,
@@ -68,7 +68,7 @@ describe(refillSlots.name, () => {
 
 	it("should leave filled slots unchanged", () => {
 		const slots: Slot[] = [null, { value: 4, suit: SUIT.CLUBS }, null, null];
-		const deck: Card[] = [{ value: 2, suit: SUIT.DIAMONDS }];
+		const deck: PlayingCard[] = [{ value: 2, suit: SUIT.DIAMONDS }];
 		const { updatedSlots, updatedDeck } = refillSlots({ slots, deck });
 		expect(updatedSlots).toEqual([
 			null,
@@ -97,10 +97,10 @@ describe(discardPlayerCards.name, () => {
 
 describe(drawPlayerCards.name, () => {
 	describe("moveCardsToBottomOfDeck", () => {
-		const aceHearts: Card = { value: 14, suit: SUIT.HEARTS };
-		const tenDiamonds: Card = { value: 10, suit: SUIT.DIAMONDS };
-		const fiveClubs: Card = { value: 5, suit: SUIT.CLUBS };
-		const joker: Card = { value: 0, suit: null };
+		const aceHearts: PlayingCard = { value: 14, suit: SUIT.HEARTS };
+		const tenDiamonds: PlayingCard = { value: 10, suit: SUIT.DIAMONDS };
+		const fiveClubs: PlayingCard = { value: 5, suit: SUIT.CLUBS };
+		const joker: PlayingCard = { value: 0, suit: null };
 
 		it("moves a single card to the bottom of the deck", () => {
 			const slots = [aceHearts, null, fiveClubs, null];
@@ -116,7 +116,7 @@ describe(drawPlayerCards.name, () => {
 
 		it("moves multiple cards (in order) to the bottom of the deck", () => {
 			const slots = [aceHearts, fiveClubs, null, tenDiamonds];
-			const deck: Card[] = [];
+			const deck: PlayingCard[] = [];
 			const result = moveCardsToBottomOfDeck({
 				slots,
 				deck,
@@ -128,7 +128,7 @@ describe(drawPlayerCards.name, () => {
 
 		it("ignores indices that are null in slots", () => {
 			const slots = [null, aceHearts, tenDiamonds, null];
-			const deck: Card[] = [fiveClubs];
+			const deck: PlayingCard[] = [fiveClubs];
 			const result = moveCardsToBottomOfDeck({
 				slots,
 				deck,
@@ -140,7 +140,7 @@ describe(drawPlayerCards.name, () => {
 
 		it("handles duplicate indices (still only moves each card once)", () => {
 			const slots = [aceHearts, fiveClubs, joker, tenDiamonds];
-			const deck: Card[] = [];
+			const deck: PlayingCard[] = [];
 			const result = moveCardsToBottomOfDeck({
 				slots,
 				deck,
@@ -152,7 +152,7 @@ describe(drawPlayerCards.name, () => {
 
 		it("does nothing if indicesToMove is empty", () => {
 			const slots = [aceHearts, fiveClubs, tenDiamonds];
-			const deck: Card[] = [joker];
+			const deck: PlayingCard[] = [joker];
 			const result = moveCardsToBottomOfDeck({
 				slots,
 				deck,
@@ -164,7 +164,7 @@ describe(drawPlayerCards.name, () => {
 
 		it("ignores out-of-bounds indices", () => {
 			const slots = [aceHearts, fiveClubs];
-			const deck: Card[] = [tenDiamonds];
+			const deck: PlayingCard[] = [tenDiamonds];
 			const result = moveCardsToBottomOfDeck({
 				slots,
 				deck,
@@ -176,7 +176,7 @@ describe(drawPlayerCards.name, () => {
 
 		it("works when deck is empty", () => {
 			const slots = [joker, null, aceHearts];
-			const deck: Card[] = [];
+			const deck: PlayingCard[] = [];
 			const result = moveCardsToBottomOfDeck({
 				slots,
 				deck,
@@ -188,7 +188,7 @@ describe(drawPlayerCards.name, () => {
 
 		it("does nothing if all slots are null", () => {
 			const slots = [null, null];
-			const deck: Card[] = [joker];
+			const deck: PlayingCard[] = [joker];
 			const result = moveCardsToBottomOfDeck({
 				slots,
 				deck,
@@ -200,7 +200,7 @@ describe(drawPlayerCards.name, () => {
 
 		it("moves all cards if all indices are included", () => {
 			const slots = [fiveClubs, joker];
-			const deck: Card[] = [aceHearts];
+			const deck: PlayingCard[] = [aceHearts];
 			const result = moveCardsToBottomOfDeck({
 				slots,
 				deck,
