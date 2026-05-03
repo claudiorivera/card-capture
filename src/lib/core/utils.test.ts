@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { type Card, type Slot, SUIT } from "./game-machine";
+import { type Card, type Slot, SUIT } from "#/lib/core/cards";
 import {
 	compactSlots,
 	discardPlayerCards,
 	drawPlayerCards,
+	moveCardsToBottomOfDeck,
 	refillSlots,
 } from "./utils";
 
@@ -95,6 +96,121 @@ describe(discardPlayerCards.name, () => {
 });
 
 describe(drawPlayerCards.name, () => {
+	describe("moveCardsToBottomOfDeck", () => {
+		const aceHearts: Card = { value: 14, suit: SUIT.HEARTS };
+		const tenDiamonds: Card = { value: 10, suit: SUIT.DIAMONDS };
+		const fiveClubs: Card = { value: 5, suit: SUIT.CLUBS };
+		const joker: Card = { value: 0, suit: null };
+
+		it("moves a single card to the bottom of the deck", () => {
+			const slots = [aceHearts, null, fiveClubs, null];
+			const deck = [tenDiamonds];
+			const result = moveCardsToBottomOfDeck({
+				slots,
+				deck,
+				indicesToMove: [0],
+			});
+			expect(result.slots).toEqual([null, null, fiveClubs, null]);
+			expect(result.deck).toEqual([tenDiamonds, aceHearts]);
+		});
+
+		it("moves multiple cards (in order) to the bottom of the deck", () => {
+			const slots = [aceHearts, fiveClubs, null, tenDiamonds];
+			const deck: Card[] = [];
+			const result = moveCardsToBottomOfDeck({
+				slots,
+				deck,
+				indicesToMove: [3, 0],
+			});
+			expect(result.slots).toEqual([null, fiveClubs, null, null]);
+			expect(result.deck).toEqual([tenDiamonds, aceHearts]);
+		});
+
+		it("ignores indices that are null in slots", () => {
+			const slots = [null, aceHearts, tenDiamonds, null];
+			const deck: Card[] = [fiveClubs];
+			const result = moveCardsToBottomOfDeck({
+				slots,
+				deck,
+				indicesToMove: [0, 1, 3],
+			});
+			expect(result.slots).toEqual([null, null, tenDiamonds, null]);
+			expect(result.deck).toEqual([fiveClubs, aceHearts]);
+		});
+
+		it("handles duplicate indices (still only moves each card once)", () => {
+			const slots = [aceHearts, fiveClubs, joker, tenDiamonds];
+			const deck: Card[] = [];
+			const result = moveCardsToBottomOfDeck({
+				slots,
+				deck,
+				indicesToMove: [1, 1, 3],
+			});
+			expect(result.slots).toEqual([aceHearts, null, joker, null]);
+			expect(result.deck).toEqual([fiveClubs, tenDiamonds]);
+		});
+
+		it("does nothing if indicesToMove is empty", () => {
+			const slots = [aceHearts, fiveClubs, tenDiamonds];
+			const deck: Card[] = [joker];
+			const result = moveCardsToBottomOfDeck({
+				slots,
+				deck,
+				indicesToMove: [],
+			});
+			expect(result.slots).toEqual(slots);
+			expect(result.deck).toEqual([joker]);
+		});
+
+		it("ignores out-of-bounds indices", () => {
+			const slots = [aceHearts, fiveClubs];
+			const deck: Card[] = [tenDiamonds];
+			const result = moveCardsToBottomOfDeck({
+				slots,
+				deck,
+				indicesToMove: [0, 5],
+			});
+			expect(result.slots).toEqual([null, fiveClubs]);
+			expect(result.deck).toEqual([tenDiamonds, aceHearts]);
+		});
+
+		it("works when deck is empty", () => {
+			const slots = [joker, null, aceHearts];
+			const deck: Card[] = [];
+			const result = moveCardsToBottomOfDeck({
+				slots,
+				deck,
+				indicesToMove: [0, 2],
+			});
+			expect(result.slots).toEqual([null, null, null]);
+			expect(result.deck).toEqual([joker, aceHearts]);
+		});
+
+		it("does nothing if all slots are null", () => {
+			const slots = [null, null];
+			const deck: Card[] = [joker];
+			const result = moveCardsToBottomOfDeck({
+				slots,
+				deck,
+				indicesToMove: [0, 1],
+			});
+			expect(result.slots).toEqual([null, null]);
+			expect(result.deck).toEqual([joker]);
+		});
+
+		it("moves all cards if all indices are included", () => {
+			const slots = [fiveClubs, joker];
+			const deck: Card[] = [aceHearts];
+			const result = moveCardsToBottomOfDeck({
+				slots,
+				deck,
+				indicesToMove: [0, 1],
+			});
+			expect(result.slots).toEqual([null, null]);
+			expect(result.deck).toEqual([aceHearts, fiveClubs, joker]);
+		});
+	});
+
 	it("should fill empty player slots from the deck", () => {
 		const result = drawPlayerCards({
 			playerSlots: [null, null, null, null],

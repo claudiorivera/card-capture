@@ -1,4 +1,4 @@
-import type { Card, Joker, Slot } from "./game-machine";
+import type { Card, Joker, Slot } from "#/lib/core/cards";
 
 export function compactSlots(slots: Slot[]): Slot[] {
 	const compactedCards = slots.filter((card): card is Card => card !== null);
@@ -7,6 +7,35 @@ export function compactSlots(slots: Slot[]): Slot[] {
 		...Array(slots.length - compactedCards.length).fill(null),
 		...compactedCards,
 	];
+}
+
+type MoveCardsToBottomOfDeckParams = {
+	slots: Slot[];
+	deck: Card[];
+	indicesToMove: number[];
+};
+
+export function moveCardsToBottomOfDeck({
+	slots,
+	deck,
+	indicesToMove,
+}: MoveCardsToBottomOfDeckParams) {
+	const uniqueIndices = Array.from(new Set(indicesToMove));
+	const cardsToMove: Card[] = [];
+
+	for (const index of uniqueIndices) {
+		const card = slots.at(index);
+		if (card && card !== null) {
+			cardsToMove.push(card);
+		}
+	}
+
+	return {
+		slots: slots.map((slot, index) =>
+			uniqueIndices.includes(index) ? null : slot,
+		),
+		deck: [...deck, ...cardsToMove],
+	};
 }
 
 export type DiscardPlayerCardsParams = {
@@ -95,8 +124,6 @@ export function drawPlayerCards({
 }
 
 export function isElite(card: Card) {
-	if (!card) return false;
-
 	return (
 		card.value === 11 ||
 		card.value === 12 ||
