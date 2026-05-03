@@ -39,7 +39,6 @@ const gameMachineSetup = setup({
 	types: {
 		context,
 		events: {} as
-			| { type: "selectPlayerCardsForDiscard"; slotsToDiscard: number[] }
 			| { type: "performPlayerDiscard"; slotsToDiscard: number[] }
 			| { type: "selectPlayerCaptureAction" }
 			| { type: "selectEnemySlotForPlayerCapture"; enemySlotIndex: number }
@@ -284,22 +283,10 @@ export const gameMachine = gameMachineSetup.createMachine({
 			},
 		},
 		discardPhase: {
-			initial: "selectingCards",
-			states: {
-				selectingCards: {
-					on: {
-						selectPlayerCardsForDiscard: {
-							target: "performingPlayerDiscard",
-						},
-					},
-				},
-				performingPlayerDiscard: {
-					on: {
-						performPlayerDiscard: {
-							actions: performPlayerDiscard,
-							target: "#game.drawPhase",
-						},
-					},
+			on: {
+				performPlayerDiscard: {
+					actions: performPlayerDiscard,
+					target: "#game.drawPhase",
 				},
 			},
 		},
