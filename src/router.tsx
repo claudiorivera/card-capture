@@ -1,9 +1,14 @@
+import { createBrowserInspector } from "@statelyai/inspect";
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import { createActor } from "xstate";
 import { gameMachine } from "#/lib/core/game-machine";
 import { routeTree } from "./routeTree.gen";
 
-const gameActor = createActor(gameMachine).start();
+const { inspect } = createBrowserInspector();
+
+const gameActor = createActor(gameMachine, {
+	inspect,
+}).start();
 
 export function getRouter() {
 	const router = createTanStackRouter({

@@ -17,7 +17,7 @@ import {
 	refillSlots,
 } from "#/lib/core/utils";
 
-type GameContext = {
+export type GameContext = {
 	playerSlots: Slot[];
 	playerDeck: PlayingCard[];
 	playerDiscardPile: PlayingCard[];
