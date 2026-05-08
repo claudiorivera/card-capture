@@ -1,4 +1,9 @@
-import type { Joker, PlayingCard, Slot } from "#/lib/core/cards";
+import {
+	type Joker,
+	type PlayingCard,
+	type Slot,
+	shuffle,
+} from "#/lib/core/cards";
 
 export function compactSlots(slots: Slot[]): Slot[] {
 	const compactedCards = slots.filter(
@@ -40,27 +45,27 @@ export function moveCardsToBottomOfDeck({
 	};
 }
 
-export type DiscardPlayerCardsParams = {
-	playerSlots: Slot[];
+export type MoveSlotsToDiscardParams = {
+	slots: Slot[];
 	discardPile: PlayingCard[];
 	slotsToDiscard: number[];
 };
 
-export function discardPlayerCards({
-	playerSlots,
+export function moveSlotsToDiscard({
+	slots,
 	discardPile,
 	slotsToDiscard,
-}: DiscardPlayerCardsParams) {
-	const newPlayerSlots = playerSlots.map((slot, index) =>
+}: MoveSlotsToDiscardParams) {
+	const newSlots = slots.map((slot, index) =>
 		slotsToDiscard.includes(index) ? null : slot,
 	);
 
 	const discardedCards = slotsToDiscard
-		.map((index) => playerSlots.at(index))
+		.map((index) => slots.at(index))
 		.filter((card): card is PlayingCard => card !== null);
 
 	return {
-		playerSlots: newPlayerSlots,
+		slots: newSlots,
 		discardPile: [...discardPile, ...discardedCards],
 	};
 }
@@ -92,36 +97,29 @@ export function refillSlots({ slots, deck }: RefillSlotsParams) {
 	return { updatedSlots, updatedDeck };
 }
 
-export type DrawPlayerCardsParams = {
-	playerSlots: Slot[];
-	playerDeck: PlayingCard[];
-	playerDiscardPile: PlayingCard[];
+export type DrawCardsParams = {
+	slots: Slot[];
+	drawDeck: PlayingCard[];
+	discardPile: PlayingCard[];
 };
 
-export function drawPlayerCards({
-	playerSlots,
-	playerDeck,
-	playerDiscardPile,
-}: DrawPlayerCardsParams) {
+export function drawCards({ slots, drawDeck, discardPile }: DrawCardsParams) {
 	const deck =
-		playerDeck.length === 0 && playerDiscardPile.length > 0
-			? playerDiscardPile.toSorted(() => Math.random() - 0.5)
-			: playerDeck;
+		drawDeck.length === 0 && discardPile.length > 0
+			? shuffle(discardPile)
+			: drawDeck;
 
 	const { updatedSlots, updatedDeck } = refillSlots({
-		slots: playerSlots,
+		slots,
 		deck,
 	});
 
 	return {
-		slots: updatedSlots.every((slot, index) => slot === playerSlots.at(index))
+		slots: updatedSlots.every((slot, index) => slot === slots.at(index))
 			? updatedSlots
 			: compactSlots(updatedSlots),
 		deck: updatedDeck,
-		discard:
-			playerDeck.length === 0 && playerDiscardPile.length > 0
-				? []
-				: playerDiscardPile,
+		discard: drawDeck.length === 0 && discardPile.length > 0 ? [] : discardPile,
 	};
 }
 
@@ -219,21 +217,18 @@ export function performEnemyCapture({
 	playerSlots,
 	enemySlots,
 	enemyDiscardPile,
-	playerDiscardPile,
 	playerSlotIndex,
 }: PerformEnemyCaptureParams) {
 	const playerCard = playerSlots.at(playerSlotIndex);
-	const enemyCard = enemySlots.at(0);
+	const enemyCard = enemySlots.at(3);
 
 	return {
 		playerSlots: playerSlots.with(playerSlotIndex, null),
-		enemySlots: enemySlots.with(0, null),
-		enemyDiscardPile: enemyCard
-			? [...enemyDiscardPile, enemyCard]
-			: enemyDiscardPile,
-		playerDiscardPile: playerCard
-			? [...playerDiscardPile, playerCard]
-			: playerDiscardPile,
+		enemySlots: enemySlots.with(3, null),
+		enemyDiscardPile:
+			enemyCard && playerCard
+				? [playerCard, enemyCard, ...enemyDiscardPile]
+				: enemyDiscardPile,
 	};
 }
 

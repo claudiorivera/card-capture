@@ -1,25 +1,20 @@
-import { useState } from "react";
 import { CaptureActionSelection } from "#/components/capture-action-selection";
 import { CurrentPhase } from "#/components/current-phase";
 import { DiscardPile } from "#/components/discard-pile";
 import { DrawDeck } from "#/components/draw-deck";
-import { EnemyCapturePlayerCardSelection } from "#/components/enemy-capture-player-card-selection";
-import { PlayerCaptureEnemyCardSelection } from "#/components/player-capture-enemy-card-selection";
-import { PlayerCapturePlayerCardSelection } from "#/components/player-capture-player-card-selection";
-import { PlayerDiscardCardSelection } from "#/components/player-discard-card-selection";
 import { Button } from "#/components/ui/button";
-import { Toggle } from "#/components/ui/toggle";
 import { isJoker } from "#/lib/core/utils";
-import { useGameContext, useGameSnapshot } from "#/lib/game-context";
+import {
+	useGameContext,
+	useGameSend,
+	useGameSnapshot,
+} from "#/lib/game-context";
 import { cn } from "#/lib/utils";
 
 export function GameBoard() {
 	const context = useGameContext();
 	const snapshot = useGameSnapshot();
-	const [selectedPlayerSlots, setSelectedPlayerSlots] = useState<Set<number>>(
-		new Set(),
-	);
-	const [selectedEnemySlot, setSelectedEnemySlot] = useState<number>();
+	const send = useGameSend();
 
 	return (
 		<div className="flex flex-col gap-4 p-4">
@@ -32,11 +27,11 @@ export function GameBoard() {
 					<Button
 						key={slot !== null ? `${slot.value}-${slot.suit}` : index}
 						className={cn(
-							"h-32 w-18 p-4",
-							index === selectedEnemySlot && "bg-muted",
+							"h-32 w-18 p-4 text-xs",
+							index === context.selectedEnemyCardIndex && "bg-muted",
 						)}
 						variant="outline"
-						onClick={() => setSelectedEnemySlot(index)}
+						onClick={() => send({ type: "toggleEnemySlotSelection", index })}
 					>
 						{slot === null
 							? "X"
@@ -53,35 +48,30 @@ export function GameBoard() {
 				<DrawDeck cards={context.playerDeck} />
 
 				{context.playerSlots.map((slot, index) => (
-					<Toggle
+					<Button
 						key={slot !== null ? `${slot.value}-${slot.suit}` : index}
-						onClick={() => {
-							const newSelectedPlayerSlots = new Set(selectedPlayerSlots);
-
-							if (newSelectedPlayerSlots.has(index)) {
-								newSelectedPlayerSlots.delete(index);
-							} else {
-								newSelectedPlayerSlots.add(index);
-							}
-
-							setSelectedPlayerSlots(newSelectedPlayerSlots);
-						}}
-						className="h-32 w-18 p-4"
+						className={cn(
+							"h-32 w-18 p-4 text-xs",
+							context.selectedPlayerCardIndices.includes(index) && "bg-muted",
+						)}
 						variant="outline"
+						onClick={() => send({ type: "togglePlayerCardSelection", index })}
 					>
 						{slot === null
 							? "X"
 							: isJoker(slot)
 								? "Joker"
 								: `${slot.value} of ${slot.suit}`}
-					</Toggle>
+					</Button>
 				))}
 
 				<DiscardPile cards={context.playerDiscardPile} />
 			</div>
 
 			{snapshot.matches("discardPhase") && (
-				<PlayerDiscardCardSelection slots={Array.from(selectedPlayerSlots)} />
+				<Button onClick={() => send({ type: "performPlayerDiscard" })}>
+					Confirm player discard
+				</Button>
 			)}
 
 			{snapshot.matches({ capturePhase: "selectingCaptureAction" }) && (
@@ -89,25 +79,36 @@ export function GameBoard() {
 			)}
 
 			{snapshot.matches({
-				capturePhase: "selectingEnemySlotForPlayerCapture",
-			}) && <PlayerCaptureEnemyCardSelection slot={selectedEnemySlot} />}
-
-			{snapshot.matches({
-				capturePhase: "selectingPlayerCardsForPlayerCapture",
-			}) && (
-				<PlayerCapturePlayerCardSelection
-					slots={Array.from(selectedPlayerSlots)}
-					enemySlot={selectedEnemySlot}
-				/>
-			)}
-
-			{snapshot.matches({
 				capturePhase: "selectingPlayerCardForEnemyCapture",
 			}) && (
-				<EnemyCapturePlayerCardSelection
-					slots={Array.from(selectedPlayerSlots)}
-				/>
+				<Button
+					disabled={context.selectedPlayerCardIndices.length < 1}
+					onClick={() => send({ type: "performEnemyCapture" })}
+				>
+					Confirm enemy capture
+				</Button>
 			)}
+
+			{snapshot.matches({ capturePhase: "selectingCardsForPlayerCapture" }) && (
+				<Button onClick={() => send({ type: "performPlayerCapture" })}>
+					Confirm player capture
+				</Button>
+			)}
+
+			{snapshot.matches({ capturePhase: "selectingCardsForSacrifice" }) && (
+				<Button
+					disabled={
+						context.selectedEnemyCardIndex === null ||
+						context.selectedPlayerCardIndices.length < 2
+					}
+					onClick={() => send({ type: "performSacrifice" })}
+				>
+					Confirm sacrifice
+				</Button>
+			)}
+
+			{snapshot.matches("lose") && <div>You lost! 😢</div>}
+			{snapshot.matches("win") && <div>You won! 🥳</div>}
 		</div>
 	);
 }

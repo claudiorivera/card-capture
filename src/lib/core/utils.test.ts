@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { type PlayingCard, type Slot, SUIT } from "#/lib/core/cards";
 import {
 	compactSlots,
-	discardPlayerCards,
-	drawPlayerCards,
+	drawCards,
 	moveCardsToBottomOfDeck,
+	moveSlotsToDiscard,
 	refillSlots,
 } from "./utils";
 
@@ -80,11 +80,11 @@ describe(refillSlots.name, () => {
 	});
 });
 
-describe(discardPlayerCards.name, () => {
+describe(moveSlotsToDiscard.name, () => {
 	it("should discard specified slots", () => {
-		const result = discardPlayerCards({
+		const result = moveSlotsToDiscard({
 			discardPile: [],
-			playerSlots: [{ value: 5, suit: SUIT.HEARTS }, null, null, null],
+			slots: [{ value: 5, suit: SUIT.HEARTS }, null, null, null],
 			slotsToDiscard: [0],
 		});
 
@@ -95,7 +95,7 @@ describe(discardPlayerCards.name, () => {
 	});
 });
 
-describe(drawPlayerCards.name, () => {
+describe(drawCards.name, () => {
 	describe("moveCardsToBottomOfDeck", () => {
 		const aceHearts: PlayingCard = { value: 14, suit: SUIT.HEARTS };
 		const tenDiamonds: PlayingCard = { value: 10, suit: SUIT.DIAMONDS };
@@ -212,13 +212,13 @@ describe(drawPlayerCards.name, () => {
 	});
 
 	it("should fill empty player slots from the deck", () => {
-		const result = drawPlayerCards({
-			playerSlots: [null, null, null, null],
-			playerDeck: [
+		const result = drawCards({
+			slots: [null, null, null, null],
+			drawDeck: [
 				{ value: 6, suit: SUIT.HEARTS },
 				{ value: 7, suit: SUIT.DIAMONDS },
 			],
-			playerDiscardPile: [],
+			discardPile: [],
 		});
 
 		expect(result.slots).toEqual([
@@ -232,10 +232,10 @@ describe(drawPlayerCards.name, () => {
 	});
 
 	it("should reshuffle discard pile into deck when the deck is empty", () => {
-		const result = drawPlayerCards({
-			playerSlots: [null, null, null, null],
-			playerDeck: [],
-			playerDiscardPile: [
+		const result = drawCards({
+			slots: [null, null, null, null],
+			drawDeck: [],
+			discardPile: [
 				{ value: 5, suit: SUIT.CLUBS },
 				{ value: 8, suit: SUIT.SPADES },
 			],
@@ -247,10 +247,10 @@ describe(drawPlayerCards.name, () => {
 	});
 
 	it("should handle empty deck and discard pile", () => {
-		const result = drawPlayerCards({
-			playerSlots: [null, null, { value: 3, suit: SUIT.HEARTS }, null],
-			playerDeck: [],
-			playerDiscardPile: [],
+		const result = drawCards({
+			slots: [null, null, { value: 3, suit: SUIT.HEARTS }, null],
+			drawDeck: [],
+			discardPile: [],
 		});
 
 		expect(result.slots).toEqual([
