@@ -1,14 +1,9 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
-import {
-	createRootRouteWithContext,
-	HeadContent,
-	Scripts,
-} from "@tanstack/react-router";
+import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import type { RootContext } from "#/lib/game-context";
 import appCss from "../styles.css?url";
 
-export const Route = createRootRouteWithContext<RootContext>()({
+export const Route = createRootRoute({
 	head: () => ({
 		meta: [
 			{

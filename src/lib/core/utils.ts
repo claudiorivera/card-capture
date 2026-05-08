@@ -104,14 +104,21 @@ export type DrawCardsParams = {
 };
 
 export function drawCards({ slots, drawDeck, discardPile }: DrawCardsParams) {
-	const deck =
-		drawDeck.length === 0 && discardPile.length > 0
-			? shuffle(discardPile)
-			: drawDeck;
+	const { updatedSlots: slotsAfterFirstPass, updatedDeck: deckAfterFirstPass } =
+		refillSlots({
+			slots,
+			deck: drawDeck,
+		});
+
+	const shouldShuffleDiscard =
+		deckAfterFirstPass.length === 0 && discardPile.length > 0;
+	const deckForSecondPass = shouldShuffleDiscard
+		? shuffle(discardPile)
+		: deckAfterFirstPass;
 
 	const { updatedSlots, updatedDeck } = refillSlots({
-		slots,
-		deck,
+		slots: slotsAfterFirstPass,
+		deck: deckForSecondPass,
 	});
 
 	return {
@@ -119,7 +126,7 @@ export function drawCards({ slots, drawDeck, discardPile }: DrawCardsParams) {
 			? updatedSlots
 			: compactSlots(updatedSlots),
 		deck: updatedDeck,
-		discard: drawDeck.length === 0 && discardPile.length > 0 ? [] : discardPile,
+		discard: shouldShuffleDiscard ? [] : discardPile,
 	};
 }
 

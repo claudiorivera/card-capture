@@ -8,12 +8,14 @@ export const SUIT = {
 export type Suit = (typeof SUIT)[keyof typeof SUIT];
 
 export type Joker = {
+	id: string;
 	value: 0;
 	suit: null;
 };
 
 export type PlayingCard =
 	| {
+			id: string;
 			value: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14;
 			suit: Suit;
 	  }
@@ -21,22 +23,26 @@ export type PlayingCard =
 
 export type Slot = PlayingCard | null;
 
+function generateCardId(): string {
+	return crypto.randomUUID();
+}
+
 export function createDecks() {
 	const playerDeck: PlayingCard[] = [];
 	const enemyDeck: PlayingCard[] = [];
 
 	for (const suit of Object.values(SUIT)) {
 		for (const value of [2, 3, 4] as const) {
-			playerDeck.push({ suit, value });
+			playerDeck.push({ id: generateCardId(), suit, value });
 		}
 
 		for (const value of [5, 6, 7, 8, 9, 10, 11, 12, 13, 14] as const) {
-			enemyDeck.push({ suit, value });
+			enemyDeck.push({ id: generateCardId(), suit, value });
 		}
 	}
 
-	playerDeck.push({ value: 0, suit: null });
-	playerDeck.push({ value: 0, suit: null });
+	playerDeck.push({ id: generateCardId(), value: 0, suit: null });
+	playerDeck.push({ id: generateCardId(), value: 0, suit: null });
 
 	return {
 		playerDeck: shuffle(playerDeck),

@@ -1,114 +1,149 @@
-import { CaptureActionSelection } from "#/components/capture-action-selection";
-import { CurrentPhase } from "#/components/current-phase";
+import { useMachine } from "@xstate/react";
+import { CardSlot } from "#/components/card-slot";
 import { DiscardPile } from "#/components/discard-pile";
 import { DrawDeck } from "#/components/draw-deck";
 import { Button } from "#/components/ui/button";
-import { isJoker } from "#/lib/core/utils";
-import {
-	useGameContext,
-	useGameSend,
-	useGameSnapshot,
-} from "#/lib/game-context";
-import { cn } from "#/lib/utils";
+import { gameMachine } from "#/lib/core/game-machine";
 
 export function GameBoard() {
-	const context = useGameContext();
-	const snapshot = useGameSnapshot();
-	const send = useGameSend();
+	const [state, send] = useMachine(gameMachine);
 
 	return (
 		<div className="flex flex-col gap-4 p-4">
-			<CurrentPhase />
-
 			<div className="grid grid-cols-6 gap-4">
-				<DrawDeck cards={context.enemyDeck} />
+				<DrawDeck cards={state.context.enemyDeck} />
 
-				{context.enemySlots.map((slot, index) => (
-					<Button
-						key={slot !== null ? `${slot.value}-${slot.suit}` : index}
-						className={cn(
-							"h-32 w-18 p-4 text-xs",
-							index === context.selectedEnemyCardIndex && "bg-muted",
-						)}
-						variant="outline"
-						onClick={() => send({ type: "toggleEnemySlotSelection", index })}
-					>
-						{slot === null
-							? "X"
-							: isJoker(slot)
-								? "Joker"
-								: `${slot.value} of ${slot.suit}`}
-					</Button>
+				{state.context.enemySlots.map((slot, index) => (
+					<CardSlot
+						key={slot ? slot.id : `empty-slot-${index}`}
+						slot={slot}
+						isSelected={state.context.selectedEnemyCardIndex === index}
+						onSelect={() => send({ type: "toggleEnemySlotSelection", index })}
+					/>
 				))}
 
-				<DiscardPile cards={context.enemyDiscardPile} />
+				<DiscardPile cards={state.context.enemyDiscardPile} />
 			</div>
 
 			<div className="grid grid-cols-6 gap-4">
-				<DrawDeck cards={context.playerDeck} />
+				<DrawDeck cards={state.context.playerDeck} />
 
-				{context.playerSlots.map((slot, index) => (
-					<Button
-						key={slot !== null ? `${slot.value}-${slot.suit}` : index}
-						className={cn(
-							"h-32 w-18 p-4 text-xs",
-							context.selectedPlayerCardIndices.includes(index) && "bg-muted",
-						)}
-						variant="outline"
-						onClick={() => send({ type: "togglePlayerCardSelection", index })}
-					>
-						{slot === null
-							? "X"
-							: isJoker(slot)
-								? "Joker"
-								: `${slot.value} of ${slot.suit}`}
-					</Button>
+				{state.context.playerSlots.map((slot, index) => (
+					<CardSlot
+						key={slot ? slot.id : `empty-slot-${index}`}
+						slot={slot}
+						isSelected={state.context.selectedPlayerCardIndices.includes(index)}
+						onSelect={() => send({ type: "togglePlayerCardSelection", index })}
+					/>
 				))}
 
-				<DiscardPile cards={context.playerDiscardPile} />
+				<DiscardPile cards={state.context.playerDiscardPile} />
 			</div>
 
-			{snapshot.matches("discardPhase") && (
+			{state.matches("discardPhase") && (
 				<Button onClick={() => send({ type: "performPlayerDiscard" })}>
 					Confirm player discard
 				</Button>
 			)}
 
-			{snapshot.matches({ capturePhase: "selectingCaptureAction" }) && (
-				<CaptureActionSelection />
+			{state.matches({ capturePhase: "selectingCaptureAction" }) && (
+				<div className="flex gap-4">
+					<Button onClick={() => send({ type: "selectPlayerCaptureAction" })}>
+						Player Capture
+					</Button>
+
+					<Button onClick={() => send({ type: "selectEnemyCaptureAction" })}>
+						Enemy Capture
+					</Button>
+
+					<Button onClick={() => send({ type: "selectSacrificeAction" })}>
+						Sacrifice
+					</Button>
+				</div>
 			)}
 
-			{snapshot.matches({
+			{state.matches({
 				capturePhase: "selectingPlayerCardForEnemyCapture",
 			}) && (
-				<Button
-					disabled={context.selectedPlayerCardIndices.length < 1}
-					onClick={() => send({ type: "performEnemyCapture" })}
-				>
-					Confirm enemy capture
-				</Button>
+				<>
+					<Button
+						disabled={state.context.selectedPlayerCardIndices.length < 1}
+						onClick={() => {
+							const playerSlotIndex =
+								state.context.selectedPlayerCardIndices[0];
+
+							if (playerSlotIndex !== undefined) {
+								send({
+									type: "performEnemyCapture",
+								});
+							}
+						}}
+					>
+						Confirm enemy capture
+					</Button>
+					<Button
+						variant="outline"
+						onClick={() => send({ type: "backToCaptureSelection" })}
+					>
+						Back
+					</Button>
+				</>
 			)}
 
-			{snapshot.matches({ capturePhase: "selectingCardsForPlayerCapture" }) && (
-				<Button onClick={() => send({ type: "performPlayerCapture" })}>
-					Confirm player capture
-				</Button>
+			{state.matches({ capturePhase: "selectingCardsForPlayerCapture" }) && (
+				<>
+					<Button
+						disabled={state.context.selectedEnemyCardIndex === null}
+						onClick={() => {
+							if (state.context.selectedEnemyCardIndex !== null) {
+								send({
+									type: "performPlayerCapture",
+								});
+							}
+						}}
+					>
+						Confirm player capture
+					</Button>
+					<Button
+						variant="outline"
+						onClick={() => send({ type: "backToCaptureSelection" })}
+					>
+						Back
+					</Button>
+				</>
 			)}
 
-			{snapshot.matches({ capturePhase: "selectingCardsForSacrifice" }) && (
-				<Button
-					disabled={
-						context.selectedEnemyCardIndex === null ||
-						context.selectedPlayerCardIndices.length < 2
-					}
-					onClick={() => send({ type: "performSacrifice" })}
-				>
-					Confirm sacrifice
-				</Button>
+			{state.matches({ capturePhase: "selectingCardsForSacrifice" }) && (
+				<>
+					<Button
+						disabled={
+							state.context.selectedEnemyCardIndex === null ||
+							state.context.selectedPlayerCardIndices.length < 2
+						}
+						onClick={() => {
+							if (
+								state.context.selectedEnemyCardIndex !== null &&
+								state.context.selectedPlayerCardIndices.length >= 2
+							) {
+								send({
+									type: "performSacrifice",
+								});
+							}
+						}}
+					>
+						Confirm sacrifice
+					</Button>
+					<Button
+						variant="outline"
+						onClick={() => send({ type: "backToCaptureSelection" })}
+					>
+						Back
+					</Button>
+				</>
 			)}
 
-			{snapshot.matches("lose") && <div>You lost! 😢</div>}
-			{snapshot.matches("win") && <div>You won! 🥳</div>}
+			{state.matches("lose") && <div>You lost! 😢</div>}
+			{state.matches("win") && <div>You won! 🥳</div>}
 		</div>
 	);
 }

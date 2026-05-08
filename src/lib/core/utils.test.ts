@@ -90,7 +90,7 @@ describe(moveSlotsToDiscard.name, () => {
 
 		expect(result).toEqual({
 			discardPile: [{ value: 5, suit: SUIT.HEARTS }],
-			playerSlots: [null, null, null, null],
+			slots: [null, null, null, null],
 		});
 	});
 });
@@ -242,6 +242,22 @@ describe(drawCards.name, () => {
 		});
 
 		expect(result.slots.filter(Boolean).length).toBe(2);
+		expect(result.deck).toEqual([]);
+		expect(result.discard).toEqual([]);
+	});
+
+	it("should refill remaining slots after reshuffling discard pile when deck is exhausted mid-refill", () => {
+		const result = drawCards({
+			slots: [null, null, null, null],
+			drawDeck: [{ value: 6, suit: SUIT.HEARTS }],
+			discardPile: [
+				{ value: 7, suit: SUIT.DIAMONDS },
+				{ value: 8, suit: SUIT.CLUBS },
+				{ value: 9, suit: SUIT.SPADES },
+			],
+		});
+
+		expect(result.slots.filter(Boolean).length).toBe(4);
 		expect(result.deck).toEqual([]);
 		expect(result.discard).toEqual([]);
 	});
