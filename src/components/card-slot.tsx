@@ -1,27 +1,29 @@
+import type { ComponentProps, ReactNode } from "react";
+import { Card } from "#/components/ui/card";
 import { Toggle } from "#/components/ui/toggle";
-import type { Slot } from "#/lib/core/cards";
-import { isJoker } from "#/lib/core/utils";
+import { cn } from "#/lib/utils";
 
 export function CardSlot({
-	slot,
 	isSelected,
 	onSelect,
+	children,
+	className,
 }: {
-	slot: Slot;
 	isSelected: boolean;
 	onSelect: () => void;
-}) {
+	children: ReactNode;
+} & ComponentProps<typeof Toggle>) {
 	return (
 		<Toggle
-			className="h-32 w-18 p-4 text-xs ring-1 ring-foreground/10"
+			className={cn(
+				"h-36 w-24 data-[state=on]:border-green-500 font-black text-2xl has-data-[slot=empty-card]:border-dashed border-2",
+				className,
+			)}
 			pressed={isSelected}
 			onPressedChange={onSelect}
+			asChild
 		>
-			{slot === null
-				? "X"
-				: isJoker(slot)
-					? "Joker"
-					: `${slot.value} of ${slot.suit}`}
+			<Card className="p-0">{children}</Card>
 		</Toggle>
 	);
 }

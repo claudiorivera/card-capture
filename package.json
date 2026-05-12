@@ -19,9 +19,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@base-ui/react": "^1.4.1",
     "@fontsource-variable/geist": "^5.2.8",
-    "@statelyai/inspect": "^0.7.1",
     "@tailwindcss/vite": "^4.2.4",
     "@tanstack/react-devtools": "latest",
     "@tanstack/react-router": "latest",

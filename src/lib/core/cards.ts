@@ -5,7 +5,7 @@ export const SUIT = {
 	SPADES: "SPADES",
 } as const;
 
-export type Suit = (typeof SUIT)[keyof typeof SUIT];
+type Suit = (typeof SUIT)[keyof typeof SUIT];
 
 export type Joker = {
 	id: string;
@@ -13,13 +13,13 @@ export type Joker = {
 	suit: null;
 };
 
-export type PlayingCard =
-	| {
-			id: string;
-			value: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14;
-			suit: Suit;
-	  }
-	| Joker;
+export type RegularCard = {
+	id: string;
+	value: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14;
+	suit: Suit;
+};
+
+export type PlayingCard = RegularCard | Joker;
 
 export type Slot = PlayingCard | null;
 

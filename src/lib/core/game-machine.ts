@@ -3,6 +3,7 @@ import { createDecks, type PlayingCard, type Slot } from "#/lib/core/cards";
 import {
 	compactSlots,
 	drawCards,
+	getHighestEligibleEnemySlotIndexForPlayerCapture,
 	isElite,
 	moveCardsToBottomOfDeck,
 	moveSlotsToDiscard,
@@ -12,7 +13,7 @@ import {
 	refillSlots,
 } from "#/lib/core/utils";
 
-export type GameContext = {
+type GameContext = {
 	playerSlots: Slot[];
 	playerDeck: PlayingCard[];
 	playerDiscardPile: PlayingCard[];
@@ -47,13 +48,18 @@ const gameMachineSetup = setup({
 			| { type: "backToCaptureSelection" }
 			| { type: "performPlayerCapture" }
 			| { type: "performEnemyCapture" }
-			| { type: "performSacrifice" },
+			| { type: "performSacrifice" }
+			| { type: "restartGame" },
 	},
 	guards: {
 		didLose: ({ context }) => context.enemyDiscardPile.some(isElite),
 		didWin: ({ context }) =>
 			context.enemyDeck.length === 0 &&
 			context.enemySlots.every((slot) => slot === null),
+		hasEligibleEnemyCardForPlayerCapture: ({ context }) =>
+			context.selectedEnemyCardIndex !== null,
+		areAllPlayerSlotsEmpty: ({ context }) =>
+			context.playerSlots.every((slot) => slot === null),
 	},
 	actions: {
 		createDecks: assign(() => {
@@ -142,6 +148,7 @@ const gameMachineSetup = setup({
 				enemySlots,
 				playerSlots,
 				selectedPlayerCardIndices: [],
+				selectedEnemyCardIndex: null,
 			};
 		}),
 		performPlayerCapture: assign(({ context }) => {
@@ -204,6 +211,12 @@ export const gameMachine = gameMachineSetup.createMachine({
 	id: "game",
 	context,
 	initial: "setup",
+	on: {
+		restartGame: {
+			target: ".setup",
+			actions: assign(() => context),
+		},
+	},
 	states: {
 		setup: {
 			entry: [
@@ -217,9 +230,15 @@ export const gameMachine = gameMachineSetup.createMachine({
 		},
 		enemyPhase: {
 			entry: [{ type: "compactEnemySlots" }, { type: "refillEnemySlots" }],
-			always: {
-				target: "discardPhase",
-			},
+			always: [
+				{
+					guard: "areAllPlayerSlotsEmpty",
+					target: "drawPhase",
+				},
+				{
+					target: "discardPhase",
+				},
+			],
 		},
 		discardPhase: {
 			on: {
@@ -267,6 +286,9 @@ export const gameMachine = gameMachineSetup.createMachine({
 					},
 				},
 				selectingPlayerCardForEnemyCapture: {
+					entry: assign(() => ({
+						selectedEnemyCardIndex: 3,
+					})),
 					on: {
 						togglePlayerCardSelection: {
 							actions: assign(({ event }) => {
@@ -291,28 +313,25 @@ export const gameMachine = gameMachineSetup.createMachine({
 				},
 				selectingCardsForPlayerCapture: {
 					on: {
-						toggleEnemySlotSelection: {
-							actions: assign(({ context, event }) => {
-								return {
-									selectedEnemyCardIndex:
-										event.index === context.selectedEnemyCardIndex
-											? null
-											: event.index,
-								};
-							}),
-						},
 						togglePlayerCardSelection: {
 							actions: assign(({ context, event }) => {
 								const isSelected = context.selectedPlayerCardIndices.includes(
 									event.index,
 								);
+								const selectedPlayerCardIndices = isSelected
+									? context.selectedPlayerCardIndices.filter(
+											(index) => index !== event.index,
+										)
+									: [...context.selectedPlayerCardIndices, event.index];
 
 								return {
-									selectedPlayerCardIndices: isSelected
-										? context.selectedPlayerCardIndices.filter(
-												(index) => index !== event.index,
-											)
-										: [...context.selectedPlayerCardIndices, event.index],
+									selectedPlayerCardIndices,
+									selectedEnemyCardIndex:
+										getHighestEligibleEnemySlotIndexForPlayerCapture({
+											playerSlots: context.playerSlots,
+											enemySlots: context.enemySlots,
+											playerCardIndices: selectedPlayerCardIndices,
+										}),
 								};
 							}),
 						},
@@ -323,10 +342,20 @@ export const gameMachine = gameMachineSetup.createMachine({
 							})),
 							target: "selectingCaptureAction",
 						},
-						performPlayerCapture: {
-							actions: { type: "performPlayerCapture" },
-							target: "#game.checkingForWin",
-						},
+						performPlayerCapture: [
+							{
+								guard: { type: "hasEligibleEnemyCardForPlayerCapture" },
+								actions: { type: "performPlayerCapture" },
+								target: "#game.checkingForWin",
+							},
+							{
+								actions: assign(() => ({
+									selectedPlayerCardIndices: [],
+									selectedEnemyCardIndex: null,
+								})),
+								target: "selectingCaptureAction",
+							},
+						],
 					},
 				},
 				selectingCardsForSacrifice: {
@@ -397,11 +426,7 @@ export const gameMachine = gameMachineSetup.createMachine({
 				},
 			],
 		},
-		win: {
-			type: "final",
-		},
-		lose: {
-			type: "final",
-		},
+		win: {},
+		lose: {},
 	},
 });

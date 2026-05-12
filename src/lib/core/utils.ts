@@ -104,29 +104,23 @@ export type DrawCardsParams = {
 };
 
 export function drawCards({ slots, drawDeck, discardPile }: DrawCardsParams) {
-	const { updatedSlots: slotsAfterFirstPass, updatedDeck: deckAfterFirstPass } =
+	const { updatedSlots: postRefillSlots, updatedDeck: postRefillDeck } =
 		refillSlots({
 			slots,
 			deck: drawDeck,
 		});
 
-	const shouldShuffleDiscard =
-		deckAfterFirstPass.length === 0 && discardPile.length > 0;
-	const deckForSecondPass = shouldShuffleDiscard
-		? shuffle(discardPile)
-		: deckAfterFirstPass;
-
-	const { updatedSlots, updatedDeck } = refillSlots({
-		slots: slotsAfterFirstPass,
-		deck: deckForSecondPass,
+	const { updatedSlots: finalSlots, updatedDeck: finalDeck } = refillSlots({
+		slots: postRefillSlots,
+		deck: postRefillDeck.length === 0 ? shuffle(discardPile) : postRefillDeck,
 	});
 
 	return {
-		slots: updatedSlots.every((slot, index) => slot === slots.at(index))
-			? updatedSlots
-			: compactSlots(updatedSlots),
-		deck: updatedDeck,
-		discard: shouldShuffleDiscard ? [] : discardPile,
+		slots: finalSlots.every((slot, index) => slot === slots.at(index))
+			? finalSlots
+			: compactSlots(finalSlots),
+		deck: finalDeck,
+		discard: postRefillDeck.length === 0 ? [] : discardPile,
 	};
 }
 
@@ -179,6 +173,45 @@ export function canPlayerCapture({
 	);
 
 	return sum >= enemyCard.value;
+}
+
+export type GetHighestEligibleEnemySlotIndexForPlayerCaptureParams = {
+	playerSlots: Slot[];
+	enemySlots: Slot[];
+	playerCardIndices: number[];
+};
+
+export function getHighestEligibleEnemySlotIndexForPlayerCapture({
+	playerSlots,
+	enemySlots,
+	playerCardIndices,
+}: GetHighestEligibleEnemySlotIndexForPlayerCaptureParams) {
+	const selectedPlayerCards = playerCardIndices
+		.map((index) => playerSlots.at(index))
+		.filter((slot): slot is PlayingCard => slot !== null && slot !== undefined);
+
+	if (selectedPlayerCards.length === 0) return null;
+
+	const eligibleEnemyCards = enemySlots
+		.map((slot, index) => (slot ? { card: slot, index } : null))
+		.filter(
+			(slotWithIndex): slotWithIndex is { card: PlayingCard; index: number } =>
+				slotWithIndex !== null,
+		)
+		.filter(({ card }) =>
+			canPlayerCapture({
+				playerCards: selectedPlayerCards,
+				enemyCard: card,
+			}),
+		);
+
+	if (eligibleEnemyCards.length === 0) return null;
+
+	return eligibleEnemyCards.reduce((highestEligibleCard, currentCard) =>
+		currentCard.card.value >= highestEligibleCard.card.value
+			? currentCard
+			: highestEligibleCard,
+	).index;
 }
 
 export type PerformPlayerCaptureParams = {
