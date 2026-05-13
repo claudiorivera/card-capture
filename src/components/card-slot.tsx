@@ -16,7 +16,7 @@ export function CardSlot({
 	return (
 		<Toggle
 			className={cn(
-				"h-36 w-24 data-[state=on]:border-green-500 font-black text-2xl has-data-[slot=empty-card]:border-dashed border-2",
+				"h-36 cursor-pointer w-24 data-[state=on]:scale-110 data-[state=on]:animate-wiggle data-[state=on]:rotate-1 font-black text-2xl has-data-[slot=empty-card]:border-dashed border-2 transition-transform duration-200",
 				className,
 			)}
 			pressed={isSelected}
