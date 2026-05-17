@@ -13,8 +13,8 @@ export function GameBoard() {
 	const [state, send] = useMachine(gameMachine);
 
 	return (
-		<div className="flex flex-col gap-8">
-			<div className="grid grid-cols-6 gap-4">
+		<div className="flex flex-col gap-4">
+			<div className="flex justify-between">
 				<DrawDeck cards={state.context.enemyDeck} />
 
 				{state.context.enemySlots.map((slot, index) => (
@@ -38,7 +38,7 @@ export function GameBoard() {
 				<DiscardPile cards={state.context.enemyDiscardPile} />
 			</div>
 
-			<div className="grid grid-cols-6 gap-4">
+			<div className="flex justify-between">
 				<DrawDeck cards={state.context.playerDeck} />
 
 				{state.context.playerSlots.map((slot, index) => (
@@ -69,7 +69,7 @@ export function GameBoard() {
 			)}
 
 			{state.matches({ capturePhase: "selectingCaptureAction" }) && (
-				<div className="grid grid-cols-3 gap-4">
+				<div className="flex justify-between">
 					<Button onClick={() => send({ type: "selectPlayerCaptureAction" })}>
 						Player Capture
 					</Button>
