@@ -3,7 +3,7 @@ import type { PlayingCard } from "#/lib/core/cards";
 
 export function DrawDeck({ cards }: { cards: PlayingCard[] }) {
 	return (
-		<Card className="h-36 relative w-24 font-black text-xl border-2">
+		<Card className="h-24 sm:h-36 relative w-14 md:w-24 font-black text-xl border-2">
 			<svg
 				className="absolute inset-0 size-full"
 				viewBox="0 0 100 100"
@@ -26,7 +26,7 @@ export function DrawDeck({ cards }: { cards: PlayingCard[] }) {
 				<rect width="100" height="100" fill="url(#hatch)" />
 			</svg>
 
-			<div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 px-2 py-1 rounded-lg bg-background text-foreground">
+			<div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 px-2 py-1 rounded-lg bg-background text-xs sm:text-xl text-foreground">
 				{cards.length}
 			</div>
 		</Card>
