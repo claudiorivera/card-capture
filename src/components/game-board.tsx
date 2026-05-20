@@ -172,7 +172,14 @@ export function GameBoard() {
 					</Button>
 				</div>
 			)}
-			{state.matches("win") && <div>You won! 🥳</div>}
+			{state.matches("win") && (
+				<div className="flex items-center gap-4">
+					<div>You won! 🥳</div>
+					<Button onClick={() => send({ type: "restartGame" })}>
+						Play again
+					</Button>
+				</div>
+			)}
 		</div>
 	);
 }
