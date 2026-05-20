@@ -32,7 +32,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.14.0",
-    "nitro": "npm:nitro-nightly@3.0.1-20260426-013439-feebdc1e",
+    "nitro": "npm:nitro-nightly@3.0.1-20260519-181425-9cc59cf7",
     "radix-ui": "^1.4.3",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
