@@ -1,4 +1,7 @@
 import { useMachine } from "@xstate/react";
+import { useEffect } from "react";
+import { useLocalStorage } from "usehooks-ts";
+import type { SnapshotFrom } from "xstate";
 import { CardSlot } from "#/components/card-slot";
 import { DiscardPile } from "#/components/discard-pile";
 import { DrawDeck } from "#/components/draw-deck";
@@ -10,7 +13,20 @@ import { gameMachine } from "#/lib/core/game-machine";
 import { isJoker } from "#/lib/core/utils";
 
 export function GameBoard() {
-	const [state, send] = useMachine(gameMachine);
+	const [snapshot, setSnapshot] = useLocalStorage<
+		SnapshotFrom<typeof gameMachine> | undefined
+	>("card-capture-snapshot", undefined);
+
+	const [state, send, actorRef] = useMachine(gameMachine, {
+		snapshot,
+	});
+
+	useEffect(() => {
+		const subscription = actorRef.subscribe((snapshot) => {
+			setSnapshot(snapshot);
+		});
+		return subscription.unsubscribe;
+	}, [actorRef, setSnapshot]);
 
 	return (
 		<div className="flex flex-col gap-4">
@@ -180,6 +196,13 @@ export function GameBoard() {
 					</Button>
 				</div>
 			)}
+
+			<Button
+				variant="destructive"
+				onClick={() => send({ type: "restartGame" })}
+			>
+				Restart game
+			</Button>
 		</div>
 	);
 }
