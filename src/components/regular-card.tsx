@@ -1,3 +1,4 @@
+import { Card } from "#/components/ui/card";
 import type { RegularCard as RegularCardType } from "#/lib/core/cards";
 
 const suitSymbolBySuit = {
@@ -20,10 +21,7 @@ function getCardRankLabel(value: number) {
 
 export function RegularCard({ card }: { card: RegularCardType }) {
 	return (
-		<div
-			data-red-suit={redSuitSet.has(card.suit) || undefined}
-			className="size-full justify-center items-center flex data-red-suit:text-red-500"
-		>
+		<div data-red-suit={redSuitSet.has(card.suit) || undefined}>
 			<div>{getCardRankLabel(card.value)}</div>
 			<div>{suitSymbolBySuit[card.suit]}</div>
 		</div>

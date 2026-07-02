@@ -48,15 +48,15 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  --animate-wiggle: wiggle 1s ease-in-out infinite;
+  --animate-wiggle: wiggle 750ms ease-in-out infinite;
 }
 @keyframes wiggle {
   0%,
   100% {
-    transform: rotate(-3deg);
+    transform: rotate(-1deg);
   }
   50% {
-    transform: rotate(3deg);
+    transform: rotate(1deg);
   }
 }
 
