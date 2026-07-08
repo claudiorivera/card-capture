@@ -2,3 +2,7 @@ allowBuilds:
   esbuild: true
   lightningcss: true
   msw: true
+minimumReleaseAgeExclude:
+  - '@tanstack/react-router-ssr-query@1.167.1'
+  - '@tanstack/router-ssr-query-core@1.169.1'
+  - shadcn@4.8.3

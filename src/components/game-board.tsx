@@ -1,208 +1,32 @@
-import { useMachine } from "@xstate/react";
-import { useEffect } from "react";
-import { useLocalStorage } from "usehooks-ts";
-import type { SnapshotFrom } from "xstate";
-import { CardSlot } from "#/components/card-slot";
-import { DiscardPile } from "#/components/discard-pile";
-import { DrawDeck } from "#/components/draw-deck";
-import { EmptyCard } from "#/components/empty-card";
-import { Joker } from "#/components/joker";
-import { RegularCard } from "#/components/regular-card";
+import { RotateCcwIcon } from "lucide-react";
+import { Controls } from "#/components/controls";
+import { EnemyRow } from "#/components/enemy-row";
+import { GamePhaseIndicator } from "#/components/game-phase-indicator";
+import { PlayerRow } from "#/components/player-row";
 import { Button } from "#/components/ui/button";
-import { gameMachine } from "#/lib/core/game-machine";
-import { isJoker } from "#/lib/core/utils";
+import { useGameStore } from "#/lib/core/game-store";
 
 export function GameBoard() {
-	const [snapshot, setSnapshot] = useLocalStorage<
-		SnapshotFrom<typeof gameMachine> | undefined
-	>("card-capture-snapshot", undefined);
-
-	const [state, send, actorRef] = useMachine(gameMachine, {
-		snapshot,
-	});
-
-	useEffect(() => {
-		const subscription = actorRef.subscribe((snapshot) => {
-			setSnapshot(snapshot);
-		});
-		return subscription.unsubscribe;
-	}, [actorRef, setSnapshot]);
+	const { restartGame } = useGameStore();
 
 	return (
 		<div className="flex flex-col gap-4">
 			<div className="flex justify-between">
-				<DrawDeck cards={state.context.enemyDeck} />
-
-				{state.context.enemySlots.map((slot, index) => (
-					<CardSlot
-						isSelected={state.context.selectedEnemyCardIndex === index}
-						key={slot ? slot.id : `enemy-slot-${index}`}
-						onSelect={() => send({ type: "toggleEnemySlotSelection", index })}
-					>
-						{slot ? (
-							isJoker(slot) ? (
-								<Joker />
-							) : (
-								<RegularCard card={slot} />
-							)
-						) : (
-							<EmptyCard />
-						)}
-					</CardSlot>
-				))}
-
-				<DiscardPile cards={state.context.enemyDiscardPile} />
-			</div>
-
-			<div className="flex justify-between">
-				<DrawDeck cards={state.context.playerDeck} />
-
-				{state.context.playerSlots.map((slot, index) => (
-					<CardSlot
-						key={slot ? slot.id : `player-slot-${index}`}
-						isSelected={state.context.selectedPlayerCardIndices.includes(index)}
-						onSelect={() => send({ type: "togglePlayerCardSelection", index })}
-					>
-						{slot ? (
-							isJoker(slot) ? (
-								<Joker />
-							) : (
-								<RegularCard card={slot} />
-							)
-						) : (
-							<EmptyCard />
-						)}
-					</CardSlot>
-				))}
-
-				<DiscardPile cards={state.context.playerDiscardPile} />
-			</div>
-
-			{state.matches("discardPhase") && (
-				<Button onClick={() => send({ type: "performPlayerDiscard" })}>
-					Confirm player discard
+				<GamePhaseIndicator />
+				<Button
+					variant="destructive"
+					onClick={restartGame}
+					title="Restart game"
+				>
+					<RotateCcwIcon />
 				</Button>
-			)}
+			</div>
 
-			{state.matches({ capturePhase: "selectingCaptureAction" }) && (
-				<div className="flex justify-between">
-					<Button onClick={() => send({ type: "selectPlayerCaptureAction" })}>
-						Player Capture
-					</Button>
+			<EnemyRow />
 
-					<Button onClick={() => send({ type: "selectEnemyCaptureAction" })}>
-						Enemy Capture
-					</Button>
+			<PlayerRow />
 
-					<Button onClick={() => send({ type: "selectSacrificeAction" })}>
-						Sacrifice
-					</Button>
-				</div>
-			)}
-
-			{state.matches({
-				capturePhase: "selectingPlayerCardForEnemyCapture",
-			}) && (
-				<>
-					<Button
-						disabled={state.context.selectedPlayerCardIndices.length < 1}
-						onClick={() => {
-							const playerSlotIndex =
-								state.context.selectedPlayerCardIndices[0];
-
-							if (playerSlotIndex !== undefined) {
-								send({
-									type: "performEnemyCapture",
-								});
-							}
-						}}
-					>
-						Confirm enemy capture
-					</Button>
-					<Button
-						variant="outline"
-						onClick={() => send({ type: "backToCaptureSelection" })}
-					>
-						Back
-					</Button>
-				</>
-			)}
-
-			{state.matches({ capturePhase: "selectingCardsForPlayerCapture" }) && (
-				<>
-					<Button
-						disabled={state.context.selectedEnemyCardIndex === null}
-						onClick={() => {
-							if (state.context.selectedEnemyCardIndex !== null) {
-								send({
-									type: "performPlayerCapture",
-								});
-							}
-						}}
-					>
-						Confirm player capture
-					</Button>
-					<Button
-						variant="outline"
-						onClick={() => send({ type: "backToCaptureSelection" })}
-					>
-						Back
-					</Button>
-				</>
-			)}
-
-			{state.matches({ capturePhase: "selectingCardsForSacrifice" }) && (
-				<>
-					<Button
-						disabled={
-							state.context.selectedEnemyCardIndex === null ||
-							state.context.selectedPlayerCardIndices.length < 2
-						}
-						onClick={() => {
-							if (
-								state.context.selectedEnemyCardIndex !== null &&
-								state.context.selectedPlayerCardIndices.length >= 2
-							) {
-								send({
-									type: "performSacrifice",
-								});
-							}
-						}}
-					>
-						Confirm sacrifice
-					</Button>
-					<Button
-						variant="outline"
-						onClick={() => send({ type: "backToCaptureSelection" })}
-					>
-						Back
-					</Button>
-				</>
-			)}
-
-			{state.matches("lose") && (
-				<div className="flex items-center gap-4">
-					<div>You lost! 😢</div>
-					<Button onClick={() => send({ type: "restartGame" })}>
-						Try again
-					</Button>
-				</div>
-			)}
-			{state.matches("win") && (
-				<div className="flex items-center gap-4">
-					<div>You won! 🥳</div>
-					<Button onClick={() => send({ type: "restartGame" })}>
-						Play again
-					</Button>
-				</div>
-			)}
-
-			<Button
-				variant="destructive"
-				onClick={() => send({ type: "restartGame" })}
-			>
-				Restart game
-			</Button>
+			<Controls />
 		</div>
 	);
 }
