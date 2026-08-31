@@ -1,4 +1,3 @@
-import { Card } from "#/components/ui/card";
 import type { RegularCard as RegularCardType } from "#/lib/core/cards";
 
 const suitSymbolBySuit = {
